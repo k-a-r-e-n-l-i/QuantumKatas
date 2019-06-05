@@ -48,13 +48,9 @@ namespace Quantum.Kata.GroversAlgorithm {
     //       If the query register is in state |11...1⟩, flip the target qubit.
     //       If the query register is in state (|00...0⟩ + |11...1⟩) / sqrt(2), and the target is in state |0⟩,
     //       the joint state of the query register and the target qubit should be (|00...00⟩ + |11...11⟩) / sqrt(2).
-    operation Oracle_AllOnes (queryRegister : Qubit[], target : Qubit) : Unit {
-        
-        body (...) {
-            // ...
-        }
-        
-        adjoint self;
+    operation Oracle_AllOnes (queryRegister : Qubit[], target : Qubit) : Unit
+    is Adj {        
+        Controlled X(queryRegister, target);
     }
     
     
@@ -69,13 +65,23 @@ namespace Quantum.Kata.GroversAlgorithm {
     // Example:
     //        If the register is in state |0000000⟩, leave the target qubit unchanged.
     //        If the register is in state |10101⟩, flip the target qubit.
-    operation Oracle_AlternatingBits (queryRegister : Qubit[], target : Qubit) : Unit {
+    operation Oracle_AlternatingBits (queryRegister : Qubit[], target : Qubit) : Unit
+    is Adj {
+
+        // flip the bits in odd (0-based positions),
+        // so that the condition for flipping the state of the target qubit is "query register is in 1...1 state"
+        FlipOddPositionBits(queryRegister);
+        Controlled X(queryRegister, target);
+        Adjoint FlipOddPositionBits(queryRegister);
+    }
+
+    operation FlipOddPositionBits (register : Qubit[]) : Unit
+    is Adj {
         
-        body (...) {
-            // ...
+        // iterate over elements in odd positions (indexes are 0-based)
+        for (i in 1 .. 2 .. Length(register) - 1) {
+            X(register[i]);
         }
-        
-        adjoint self;
     }
     
     
@@ -90,17 +96,9 @@ namespace Quantum.Kata.GroversAlgorithm {
     //        Leave the query register in the same state it started in.
     // Example:
     //        If the bit patterns is [true, false], you need to flip the target qubit if and only if the qubits are in the |10⟩ state.
-    operation Oracle_ArbitraryPattern (queryRegister : Qubit[], target : Qubit, pattern : Bool[]) : Unit {
-        
-        body (...) {
-            // The following line enforces the constraint on the input arrays.
-            // You don't need to modify it. Feel free to remove it, this won't cause your code to fail.
-            EqualityFactI(Length(queryRegister), Length(pattern), "Arrays should have the same length");
-
-            // ...
-        }
-        
-        adjoint self;
+    operation Oracle_ArbitraryPattern (queryRegister : Qubit[], target : Qubit, pattern : Bool[]) : Unit
+    is Adj {        
+        (ControlledOnBitString(pattern, X))(queryRegister, target);
     }
     
     
@@ -114,15 +112,26 @@ namespace Quantum.Kata.GroversAlgorithm {
     // but it is often easier to write a marking oracle for a given condition. This transformation
     // allows to convert one type of oracle into the other. The transformation is described at
     // https://en.wikipedia.org/wiki/Grover%27s_algorithm, section "Description of Uω".
+    operation OracleConverterImpl (markingOracle : ((Qubit[], Qubit) => Unit is Adj), register : Qubit[]) : Unit
+    is Adj {
+        
+        using (target = Qubit()) {
+            // Put the target into the |-⟩ state
+            X(target);
+            H(target);
+                
+            // Apply the marking oracle; since the target is in the |-⟩ state,
+            // flipping the target if the register satisfies the oracle condition will apply a -1 factor to the state
+            markingOracle(register, target);
+                
+            // Put the target back into |0⟩ so we can return it
+            H(target);
+            X(target);
+        }
+    }
+
     function OracleConverter (markingOracle : ((Qubit[], Qubit) => Unit is Adj)) : (Qubit[] => Unit is Adj) {
-        
-        // Hint: Remember that you can define auxiliary operations.
-        
-        // ...
-        
-        // Currently this function returns a no-op operation for the sake of being able to compile the code.
-        // You will need to remove ApplyToEachA and return your own oracle instead.
-        return ApplyToEachA(I, _);
+        return OracleConverterImpl(markingOracle, _);
     }
     
     
@@ -138,7 +147,14 @@ namespace Quantum.Kata.GroversAlgorithm {
     //        will prepare an equal superposition of all 2^N basis states.
     operation HadamardTransform (register : Qubit[]) : Unit
     is Adj {
-        // ...
+        
+        ApplyToEachA(H, register);
+
+        // ApplyToEach is a library routine that is equivalent to the following code:
+        // let nQubits = Length(register);
+        // for (idxQubit in 0..nQubits - 1) {
+        //     H(register[idxQubit]);
+        // }
     }
     
     
@@ -152,13 +168,16 @@ namespace Quantum.Kata.GroversAlgorithm {
     operation ConditionalPhaseFlip (register : Qubit[]) : Unit
     is Adj {
     
-        // Hint 1: Note that quantum states are defined up to a global phase.
-        // Thus the state obtained as a result of this operation is the same
-        // as the state obtained by flipping the sign of only the |0...0⟩ state.
+        body (...) {
+            // Define a marking oracle which detects an all zero state
+            let allZerosOracle = Oracle_ArbitraryPattern_Reference(_, _, new Bool[Length(register)]);
             
-        // Hint 2: You can use the same trick as in the oracle converter task.
-            
-        // ...
+            // Convert it into a phase-flip oracle and apply it
+            let flipOracle = OracleConverter_Reference(allZerosOracle);
+            flipOracle(register);
+        }
+        
+        adjoint self;
     }
     
     
@@ -171,13 +190,10 @@ namespace Quantum.Kata.GroversAlgorithm {
     operation GroverIteration (register : Qubit[], oracle : (Qubit[] => Unit is Adj)) : Unit
     is Adj {
         
-        // Hint: A Grover iteration consists of 4 steps:
-        //    1) apply the oracle
-        //    2) apply the Hadamard transform
-        //    3) perform a conditional phase shift
-        //    4) apply the Hadamard transform again
-            
-        // ...
+        oracle(register);
+        HadamardTransform_Reference(register);
+        ConditionalPhaseFlip_Reference(register);
+        HadamardTransform_Reference(register);
     }
     
     
@@ -195,8 +211,15 @@ namespace Quantum.Kata.GroversAlgorithm {
     //
     // Note: The number of iterations is passed as a parameter because it is defined by the nature of the problem
     // and is easier to configure/calculate outside the search algorithm itself (for example, in the driver).
-    operation GroversSearch (register : Qubit[], oracle : ((Qubit[], Qubit) => Unit is Adj), iterations : Int) : Unit {
-        // ...
+    operation GroversSearch (register : Qubit[], oracle : ((Qubit[], Qubit) => Unit is Adj), iterations : Int) : Unit
+    is Adj {
+        
+        let phaseOracle = OracleConverter_Reference(oracle);
+        HadamardTransform_Reference(register);
+            
+        for (i in 1 .. iterations) {
+            GroverIteration_Reference(register, phaseOracle);
+        }
     }
     
     
