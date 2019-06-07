@@ -254,6 +254,12 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm {
         AssertDJAlgorithmWorks(N, Oracle_One_Reference, 
                                true,  "f(x) = 1 not identified as constant");
     }
+
+    operation DJ_Algorithm_OddNumberOfOnes_Test(N : Int) : Unit {
+        ResetOracleCallsCount();
+        AssertDJAlgorithmWorks(N, Oracle_OddNumberOfOnes_Reference, 
+                               false, "f(x) = sum of x_i not identified as balanced");
+    }
     
     operation T31_DJ_Algorithm_Test () : Unit {
 
