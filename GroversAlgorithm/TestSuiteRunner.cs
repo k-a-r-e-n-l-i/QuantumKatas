@@ -33,10 +33,12 @@ namespace Quantum.Kata.GroversAlgorithm
             using (var sim = new QuantumSimulator())
             {
                 // OnLog defines action(s) performed when Q# test calls function Message
-                sim.OnLog += (msg) => { output.WriteLine(msg); };
-                sim.OnLog += (msg) => { Debug.WriteLine(msg); };
-                op.TestOperationRunner(sim);
+                // sim.OnLog += (msg) => { output.WriteLine(msg); };
+                // sim.OnLog += (msg) => { Debug.WriteLine(msg); };
+                // op.TestOperationRunner(sim);
+                // T13_Oracle_ArbitraryPattern_Test.Run(sim);
             }
+            System.Console.WriteLine("Hello");
         }
     }
 }
