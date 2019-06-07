@@ -23,13 +23,30 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm
     {
         static void Main()
         {
+            int numTrials = 10;
+            int maxNumQubits = 23;
+
             Stopwatch s = new Stopwatch();
-            using (var sim = new QuantumSimulator()) {
-                s.Start();
-                T31_DJ_Algorithm_Test.Run(sim);
-                s.Stop();
-                TimeSpan ts = s.Elapsed;
-                System.Console.WriteLine(String.Format("Time for T31: {0}", ts));
+            using (var sim = new CounterSimulator()) {
+                for (int numQubits = 1; numQubits < maxNumQubits; numQubits++) {
+                    System.Console.WriteLine(String.Format("Testing with {0} qubits: ", numQubits));
+
+                    s.Start();
+                    for (int i = 0; i < numTrials; i++) {
+                        var r = DJ_Algorithm_F_0_Test.Run(sim, numQubits).Result;
+                    }
+                    s.Stop();
+                    System.Console.WriteLine(String.Format("Time for f(x) = 0 averaged over {0} trials: {1}", numTrials, s.ElapsedMilliseconds));
+                    s.Reset();
+
+                    s.Start();
+                    for (int i = 0; i < numTrials; i++) {
+                        var r = DJ_Algorithm_F_1_Test.Run(sim, numQubits).Result;
+                    }
+                    s.Stop();
+                    System.Console.WriteLine(String.Format("Time for f(x) = 1 averaged over {0} trials: {1}", numTrials, s.ElapsedMilliseconds));
+                    s.Reset();
+                }
             }
         }
     }

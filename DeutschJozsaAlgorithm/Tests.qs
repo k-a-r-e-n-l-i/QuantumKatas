@@ -42,13 +42,140 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm {
         }
     }
     
+    
+    // ------------------------------------------------------
+    operation T11_Oracle_Zero_Test () : Unit {
+        AssertTwoOraclesAreEqual(1 .. 10, Oracle_Zero, Oracle_Zero_Reference);
+    }
+    
+    
+    // ------------------------------------------------------
+    operation T12_Oracle_One_Test () : Unit {
+        AssertTwoOraclesAreEqual(1 .. 10, Oracle_One, Oracle_One_Reference);
+    }
+    
+    
+    // ------------------------------------------------------
+    operation T13_Oracle_Kth_Qubit_Test () : Unit {
+        let maxQ = 6;
+        
+        // loop over index of the qubit to be used
+        for (k in 0 .. maxQ - 1) {
+            // number of qubits to try is from k+1 to 6
+            AssertTwoOraclesAreEqual(k + 1 .. maxQ, Oracle_Kth_Qubit(_, _, k), Oracle_Kth_Qubit_Reference(_, _, k));
+        }
+    }
+    
+    
+    // ------------------------------------------------------
+    operation T14_Oracle_OddNumberOfOnes_Test () : Unit {
+        
+        // cross-test: for 1 qubit it's the same as Kth_Qubit for k = 0
+        AssertTwoOraclesAreEqual(1 .. 1, Oracle_OddNumberOfOnes, Oracle_Kth_Qubit_Reference(_, _, 0));
+
+        AssertTwoOraclesAreEqual(1 .. 10, Oracle_OddNumberOfOnes, Oracle_OddNumberOfOnes_Reference);
+    }
+    
+    
     // ------------------------------------------------------
     operation AssertTwoOraclesWithIntAreEqual (r : Int[], 
         oracle1 : ((Qubit[], Qubit, Int[]) => Unit), 
         oracle2 : ((Qubit[], Qubit, Int[]) => Unit is Adj)) : Unit {
         AssertTwoOraclesAreEqual(Length(r) .. Length(r), oracle1(_, _, r), oracle2(_, _, r));
     }
+    
+    
+    operation T15_Oracle_ProductFunction_Test () : Unit {
+        // cross-tests
+        // the mask for all 1's corresponds to Oracle_OddNumberOfOnes
+        mutable r = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let L = Length(r);
         
+        for (i in 2 .. L) {
+            AssertTwoOraclesAreEqual(i .. i, Oracle_ProductFunction(_, _, r[0 .. i - 1]), Oracle_OddNumberOfOnes_Reference);
+        }
+        
+        // the mask with all 0's corresponds to Oracle_Zero
+        for (i in 0 .. L - 1) {
+            set r w/= i <- 0;
+        }
+        
+        for (i in 2 .. L) {
+            AssertTwoOraclesAreEqual(i .. i, Oracle_ProductFunction(_, _, r[0 .. i - 1]), Oracle_Zero_Reference);
+        }
+        
+        // the mask with only the K-th element set to 1 corresponds to Oracle_Kth_Qubit
+        for (i in 0 .. L - 1) {
+            AssertTwoOraclesAreEqual(L .. L, Oracle_ProductFunction(_, _, r w/ i <- 1), Oracle_Kth_Qubit_Reference(_, _, i));
+        }
+        
+        set r = [1, 0, 1, 0, 1, 0];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductFunction, Oracle_ProductFunction_Reference);
+
+        set r = [1, 0, 0, 1];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductFunction, Oracle_ProductFunction_Reference);
+
+        set r = [0, 0, 1, 1, 1];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductFunction, Oracle_ProductFunction_Reference);
+    }
+    
+    
+    operation T16_Oracle_ProductWithNegationFunction_Test () : Unit {
+        // cross-tests
+        // the mask for all 1's corresponds to Oracle_OddNumberOfOnes
+        mutable r = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let L = Length(r);
+        
+        for (i in 2 .. L) {
+            AssertTwoOraclesAreEqual(i .. i, Oracle_ProductWithNegationFunction(_, _, r[0 .. i - 1]), Oracle_OddNumberOfOnes_Reference);
+        }
+        
+        set r = [1, 0, 1, 0, 1, 0];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductWithNegationFunction, Oracle_ProductWithNegationFunction_Reference);
+
+        set r = [1, 0, 0, 1];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductWithNegationFunction, Oracle_ProductWithNegationFunction_Reference);
+
+        set r = [0, 0, 1, 1, 1];
+        AssertTwoOraclesWithIntAreEqual(r, Oracle_ProductWithNegationFunction, Oracle_ProductWithNegationFunction_Reference);
+    }
+    
+    
+    operation T17_Oracle_HammingWithPrefix_Test () : Unit {
+        mutable prefix = [1];
+        AssertTwoOraclesAreEqual(1 .. 10, Oracle_HammingWithPrefix(_, _, prefix), Oracle_HammingWithPrefix_Reference(_, _, prefix));
+
+        set prefix = [1, 0];
+        AssertTwoOraclesAreEqual(2 .. 10, Oracle_HammingWithPrefix(_, _, prefix), Oracle_HammingWithPrefix_Reference(_, _, prefix));
+
+        set prefix = [0, 0, 0];
+        AssertTwoOraclesAreEqual(3 .. 10, Oracle_HammingWithPrefix(_, _, prefix), Oracle_HammingWithPrefix_Reference(_, _, prefix));
+    }
+    
+    
+    operation T18_Oracle_MajorityFunction_Test () : Unit {
+        AssertTwoOraclesAreEqual(3 .. 3, Oracle_MajorityFunction, Oracle_MajorityFunction_Reference);
+    }
+    
+    
+    // ------------------------------------------------------
+    operation T21_BV_StatePrep_Test () : Unit {
+        
+        for (N in 1 .. 10) {
+            
+            using (qs = Qubit[N + 1]) {
+                // apply operation that needs to be tested
+                BV_StatePrep(qs[0 .. N - 1], qs[N]);
+                
+                // apply adjoint reference operation
+                Adjoint BV_StatePrep_Reference(qs[0 .. N - 1], qs[N]);
+                
+                // assert that all qubits end up in |0⟩ state
+                AssertAllZero(qs);
+            }
+        }
+    }
+    
     // ------------------------------------------------------
     function AllEqualityFactI (actual : Int[], expected : Int[], message : String) : Unit {
         
@@ -115,7 +242,18 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm {
         let nu = GetOracleCallsCount(oracle);
         EqualityFactB(nu <= 1, true, $"You are allowed to call the oracle at most once, and you called it {nu} times");
     }
-    
+
+    operation DJ_Algorithm_F_0_Test(N : Int) : Unit {
+        ResetOracleCallsCount();
+        AssertDJAlgorithmWorks(N, Oracle_Zero_Reference,
+                               true,  "f(x) = 0 not identified as constant");
+    }
+
+    operation DJ_Algorithm_F_1_Test(N : Int) : Unit {
+        ResetOracleCallsCount();
+        AssertDJAlgorithmWorks(N, Oracle_One_Reference, 
+                               true,  "f(x) = 1 not identified as constant");
+    }
     
     operation T31_DJ_Algorithm_Test () : Unit {
 
@@ -141,5 +279,46 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm {
                                false, "f(x) = majority function not identified as balanced");
     }
     
+    
+    // ------------------------------------------------------
+    operation AssertNonameAlgorithmWorks (r : Int[]) : Unit {
+        
+        let givenOracle = Oracle_ProductWithNegationFunction_Reference(_, _, r);
+        let res = Noname_Algorithm(Length(r), givenOracle);
+        
+        // check that the oracle was called once (later it will be called again by test harness)
+        let nu = GetOracleCallsCount(givenOracle);
+        EqualityFactB(nu <= 1, true, $"You are allowed to call the oracle at most once, and you called it {nu} times");
+        
+        // check that the oracle obtained from r
+        // is equivalent to the oracle obtained from return value
+        EqualityFactI(Length(res), Length(r), "Returned bit vector must have the same length as the oracle input.");
+        let resOracle = Oracle_ProductWithNegationFunction_Reference(_, _, res);
+        AssertTwoOraclesAreEqual(Length(r) .. Length(r), givenOracle, resOracle);
+    }
+    
+    
+    operation AssertNonameAlgorithmWorksOnInt (n : Int, bits : Int) : Unit {
+        let r = IntArrFromPositiveInt(n, bits);
+        AssertNonameAlgorithmWorks(r);
+    }
+    
+    
+    operation T41_Noname_Algorithm_Test () : Unit {
+        
+        ResetOracleCallsCount();
+        
+        // apply the algorithm to reference oracles and check that the output is as expected
+        // test all bit vectors of length 1..4
+        for (bits in 1 .. 4) {
+            
+            for (n in 0 .. 2 ^ bits - 1) {
+                AssertNonameAlgorithmWorksOnInt(n, bits);
+            }
+        }
+        
+        // and a couple of random ones
+        AssertNonameAlgorithmWorks([1, 1, 1, 0, 0]);
+        AssertNonameAlgorithmWorks([1, 0, 1, 0, 1, 0]);
+    }
 }
-
