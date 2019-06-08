@@ -234,6 +234,9 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm {
         AssertBVAlgorithmWorks([1, 0, 1, 0, 1, 0]);
     }
     
+    operation BV_Algorithm_Test(r : Int[]) : Unit {
+        AssertBVAlgorithmWorks(r);
+    }
     
     // ------------------------------------------------------
     operation AssertDJAlgorithmWorks (N : Int, oracle : ((Qubit[], Qubit) => Unit), expected : Bool, msg : String) : Unit {

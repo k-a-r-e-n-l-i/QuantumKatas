@@ -9,7 +9,6 @@
 using System;
 using System.Diagnostics;
 
-
 using Microsoft.Quantum.Katas;
 using Microsoft.Quantum.Simulation.XUnit;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -25,6 +24,7 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm
         {
             int numTrials = 10;
             int maxNumQubits = 23;
+            int numBVTests = 5;
 
             Stopwatch s = new Stopwatch();
             using (var sim = new CounterSimulator()) {
@@ -62,6 +62,21 @@ namespace Quantum.Kata.DeutschJozsaAlgorithm
 
                     // BERNSTEIN-VAZIRANI ////////////////////////////////////////////////////////////////
 
+                    // test with many random f(x) = ax
+
+                    Random rnd = new Random();
+                    for (int j = 0; j < numBVTests; j++) {
+                        s.Start();
+                        // generate random a
+                        int n = rnd.Next(0, 2 ^ numQubits-1);
+                        var a = IntArrFromPositiveInt.Run(sim, n, numQubits).Result;
+                        for (int i = 0; i < numTrials; i++) {
+                            var r = BV_Algorithm_Test.Run(sim, a).Result;
+                        }
+                        s.Stop();
+                        System.Console.WriteLine(String.Format("Time for BV with a = {2} averaged over {0} trials: {1}", numTrials, s.ElapsedMilliseconds, n));
+                        s.Reset();
+                    }
                 }
             }
         }
