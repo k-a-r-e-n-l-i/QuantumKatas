@@ -5,14 +5,6 @@ using System.Diagnostics;
 
 using System;
 
-
-// using Microsoft.Quantum.Katas;
-using Microsoft.Quantum.Simulation.XUnit;
-using Microsoft.Quantum.Simulation.Simulators;
-
-using Xunit.Abstractions;
-
-
 namespace Quantum.Kata.GroversAlgorithm
 {
     public class ProfilingRunner
@@ -21,24 +13,22 @@ namespace Quantum.Kata.GroversAlgorithm
         {
             
             using (var sim = new QuantumSimulator()) {
+                //fix startup overhead time
+                var res = T13_Oracle_ArbitraryPattern_Test.Run(sim, 2).Result;
+                var iters = 10;
+                Stopwatch s = new Stopwatch();
+                s.Start();
                 for (int n = 2; n < 12; n++) {
-                    Stopwatch s = new Stopwatch();
-                    s.Start();
-                    var res = T13_Oracle_ArbitraryPattern_Test.Run(sim, n).Result;
-                    if(n == 5){
-                        for(int j = 0; j < 101; j++){
-                            var res1 = T13_Oracle_ArbitraryPattern_Test.Run(sim, n).Result;
-                            if (j%10 == 0){
-                                Console.WriteLine(s.ElapsedMilliseconds);
-                            }
-                        }
+                    s.Restart();
+                    
+                    for(int j = 0; j < iters; j++){
+                        var res2 = T13_Oracle_ArbitraryPattern_Test.Run(sim, n).Result;
                     }
                     s.Stop();
                     long ts = s.ElapsedMilliseconds;
-                    // Console.WriteLine(ts);
+                    Console.WriteLine(ts/iters);
                     // System.Console.WriteLine(String.Format("Time for T13 with n={1}: {0}", ts, n));
                 }
-                
             }
         }
     }
