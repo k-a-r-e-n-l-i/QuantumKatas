@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 //////////////////////////////////////////////////////////////////////
-// This file contains parts of the testing harness. 
+// This file contains parts of the testing harness.
 // You should not modify anything in this file.
 // The tasks themselves can be found in Tasks.qs file.
 //////////////////////////////////////////////////////////////////////
@@ -13,10 +13,12 @@ namespace Q22
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Diagnostics;
 
     using Microsoft.Quantum.Simulation.Core;
 
     using Quantum.Kata.SimonsAlgorithm;
+
 
     using Newtonsoft.Json;
 
@@ -73,7 +75,7 @@ namespace Q22
                 info.AddValue("kernel", JsonConvert.SerializeObject(kernel), typeof(string));
                 info.AddValue("transformation", JsonConvert.SerializeObject(transformation), typeof(string));
             }
-            
+
             public override string ToString()
             {
                 return instance.ToString("D2");
@@ -109,23 +111,54 @@ namespace Q22
         [MemberData(nameof(GetInstances))]
         public void Test(Instance instance)
         {
-            var sim = new OracleCounterSimulator();
-            
-            var len = instance.Kernel.Count;
-            var saver = new List<IQArray<long>>();
-
-            for (int i = 0; i < len * 4; ++i)
             {
-                var (vector, uf) = cs_helper.Run(sim, len, instance.ExtendedTransformation).Result;
-                Assert.Equal(1, sim.GetOperationCount(uf));
-                saver.Add(vector);
+                var sim = new OracleCounterSimulator();
+
+                var len = instance.Kernel.Count;
+                var saver = new List<IQArray<long>>();
+
+                for (int i = 0; i < len * 4; ++i)
+                {
+                    var (vector, uf) = cs_helper.Run(sim, len, instance.ExtendedTransformation).Result;
+                    Assert.Equal(1, sim.GetOperationCount(uf));
+                    saver.Add(vector);
+                }
+
+                var matrix = new BooleanMatrix(saver);
+                var kernel = matrix.GetKernel();
+
+
+                Assert.Equal(instance.Kernel.Contains(true) ? 2 : 1, kernel.Count);
+                Assert.Contains(instance.Kernel, kernel);
             }
+            Stopwatch s = new Stopwatch();
+            s.Start();
+            for(int j = 0; j < 10; j++){
+                var sim = new OracleCounterSimulator();
 
-            var matrix = new BooleanMatrix(saver);
-            var kernel = matrix.GetKernel();
+                var len = instance.Kernel.Count;
+                var saver = new List<IQArray<long>>();
 
-            Assert.Equal(instance.Kernel.Contains(true) ? 2 : 1, kernel.Count);
-            Assert.Contains(instance.Kernel, kernel);
+                for (int i = 0; i < len * 4; ++i)
+                {
+                    var (vector, uf) = cs_helper.Run(sim, len, instance.ExtendedTransformation).Result;
+                    Assert.Equal(1, sim.GetOperationCount(uf));
+                    saver.Add(vector);
+                }
+
+                var matrix = new BooleanMatrix(saver);
+                var kernel = matrix.GetKernel();
+
+
+                Assert.Equal(instance.Kernel.Contains(true) ? 2 : 1, kernel.Count);
+                Assert.Contains(instance.Kernel, kernel);
+            }
+            s.Stop();
+            Console.Write(instance.instance);
+            Console.Write(",");
+            Console.Write(instance.kernel.Count());
+            Console.Write(",");
+            Console.WriteLine(s.ElapsedMilliseconds);
         }
     }
 }
