@@ -14,10 +14,17 @@ namespace Quantum.Kata.GroversAlgorithm
             
             using (var sim = new QuantumSimulator()) {
                 //fix startup overhead time
+                Stopwatch s = new Stopwatch();
                 var res = T13_Oracle_ArbitraryPattern_Test.Run(sim, 2).Result;
                 var iters = 10;
-                Stopwatch s = new Stopwatch();
                 s.Start();
+                for(int i = 0; i < 100; i++){
+                    var res3 = T13_Oracle_ArbitraryPattern_Test.Run(sim, 5).Result;
+                }
+                Console.WriteLine(s.ElapsedMilliseconds/100);
+                
+                
+                
                 for (int n = 2; n < 12; n++) {
                     s.Restart();
                     
