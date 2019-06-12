@@ -1,10 +1,31 @@
+INPUTTING FUNCTIONS:
 DEUTSCH-JOSZA:
 To test a new functions, an oracle must be defined in Q#. The function can then be tested by passing in the oracle to the AssertDJAlgorithmWorks function, along with the number of qubits N, and if the function is constant (true) or not (false).
 
 BERNSTEIN-VAZIRANI:
-
+To create a new oracle, the Oracle_ProductFunction_Reference function can be used and then passed to the BV_Algorithm function.
  
 SIMON:
 The code tests all the functions defined in instances.json. To add a new function, the user must define a transformation matrix, which is a n-1 x n matrix containing n-1 linearly independent rows such that s*r % 2 = 0 for each row. Finally, s/kernel is defined to verify the result.
 
 GROVER:
+The code is set up to test random functions with Grovers. To create a new oracle, the Oracle_ArbitraryPattern_Reference function can be used and then passed to GroversSearch.
+-----------------------------
+RUNNING THE PROGRAM:
+DJ and BV:
+Run
+$ dotnet run ProfilingRunner.cs
+in DeutschJozsaAlgorithm
+
+SIMON:
+Run
+$ dotnet test
+in SimonsAlgorithm
+
+GROVER:
+Run
+$ dotnet run Profilings.cs
+in GroversAlgorithm
+-----------------------------
+OUTPUT:
+The code contains asserts that will verify the output of the functions. Timing information for the functions will also be printed to the console.
