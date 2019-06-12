@@ -50,12 +50,12 @@ namespace Quantum.Kata.GroversAlgorithm {
     
     
     // ------------------------------------------------------
-    operation T13_Oracle_ArbitraryPattern_Test (n : Int) : Unit {
-        let pattern = IntAsBoolArray(RandomIntPow2(n), n);
-        let testOp = QubitArrayWrapperOperation(Oracle_ArbitraryPattern(_, _, pattern), _);
-        let refOp = QubitArrayWrapperOperation(Oracle_ArbitraryPattern_Reference(_, _, pattern), _);
-        AssertOperationsEqualReferenced(n + 1, testOp, refOp);
-    }
+    // operation T13_Oracle_ArbitraryPattern_Test (n : Int) : Unit {
+    //     let pattern = IntAsBoolArray(RandomIntPow2(n), n);
+    //     let testOp = QubitArrayWrapperOperation(Oracle_ArbitraryPattern(_, _, pattern), _);
+    //     let refOp = QubitArrayWrapperOperation(Oracle_ArbitraryPattern_Reference(_, _, pattern), _);
+    //     AssertOperationsEqualReferenced(n + 1, testOp, refOp);
+    // }
     
     
     // // ------------------------------------------------------
@@ -96,14 +96,13 @@ namespace Quantum.Kata.GroversAlgorithm {
     
     
     // // ------------------------------------------------------
-    // operation T31_GroversSearch_Test () : Unit {
-    //     for (n in 2 .. 10) {
-    //         let pattern = IntAsBoolArray(RandomIntPow2(n), n);
-    //         let markingOracle = Oracle_ArbitraryPattern_Reference(_, _, pattern);
-    //         let testOp = GroversSearch(_, markingOracle, 4);
-    //         let refOp = GroversSearch_Reference(_, markingOracle, 4);
-    //         AssertOperationsEqualReferenced(n, testOp, refOp);
-    //     }
-    // }
+    operation T31_GroversSearch_Test (n: Int) : Unit {
+        let pattern = IntAsBoolArray(RandomIntPow2(n), n);
+        let markingOracle = Oracle_ArbitraryPattern_Reference(_, _, pattern);
+        let testOp = GroversSearch(_, markingOracle, 4);
+        let refOp = GroversSearch_Reference(_, markingOracle, 4);
+        AssertOperationsEqualReferenced(n, testOp, refOp);
+    
+    }
     
 }
